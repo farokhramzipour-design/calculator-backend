@@ -12,7 +12,12 @@ settings = get_settings()
 configure_logging()
 logger = get_logger()
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(
+    title=settings.app_name,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(shipments.router, prefix=settings.api_prefix)
