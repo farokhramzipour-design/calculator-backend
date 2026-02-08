@@ -34,7 +34,10 @@ async def upload_invoice(
     stored_path = upload_dir / f"{file_id}{suffix}"
     stored_path.write_bytes(await file.read())
 
-    extracted = await extract_invoice(stored_path, "pdf" if suffix == ".pdf" else "docx")
+    try:
+        extracted = await extract_invoice(stored_path, "pdf" if suffix == ".pdf" else "docx")
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     invoice = Invoice(
         user_id=user.id,

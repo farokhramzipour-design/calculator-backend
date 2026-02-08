@@ -70,19 +70,38 @@ async def extract_invoice(file_path: Path, file_type: str) -> dict[str, Any]:
                         "unit_price": {"type": ["number", "string", "null"]},
                         "total_price": {"type": ["number", "string", "null"]},
                     },
-                    "required": ["description"],
+                    "required": [
+                        "description",
+                        "hs_code",
+                        "origin_country",
+                        "quantity",
+                        "unit_price",
+                        "total_price",
+                    ],
+                    "additionalProperties": False,
                 },
             },
-            "raw_fields": {"type": "object"},
         },
-        "required": ["items"],
-        "additionalProperties": True,
+        "required": [
+            "invoice_number",
+            "invoice_date",
+            "supplier_name",
+            "buyer_name",
+            "currency",
+            "subtotal",
+            "freight",
+            "insurance",
+            "tax_total",
+            "total",
+            "items",
+        ],
+        "additionalProperties": False,
     }
 
     prompt = (
         "Extract invoice data from the provided document. The invoice may be in any language. "
         "Return JSON matching the provided schema. Use ISO dates and numbers. "
-        "If a field is missing, return null."
+        "If a field is missing, return null. JSON only."
     )
 
     async with httpx.AsyncClient(timeout=60) as client:
@@ -144,7 +163,10 @@ async def extract_invoice(file_path: Path, file_type: str) -> dict[str, Any]:
             headers=headers,
             json=payload,
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(f"OpenAI error {response.status_code}: {response.text}") from exc
         data = response.json()
         output_text = _extract_output_text(data)
         extracted = json.loads(output_text)
