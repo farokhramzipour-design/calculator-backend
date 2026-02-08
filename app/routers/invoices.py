@@ -73,8 +73,10 @@ async def upload_invoice(
         )
 
     await session.commit()
-    await session.refresh(invoice)
-    return invoice
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
+    )
+    return result.scalar_one()
 
 
 @router.get("", response_model=list[InvoiceRead])
@@ -109,8 +111,10 @@ async def review_invoice(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     invoice.status = payload.status
     await session.commit()
-    await session.refresh(invoice)
-    return invoice
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
+    )
+    return result.scalar_one()
 
 
 @router.post("/assign", response_model=InvoiceRead)
@@ -126,5 +130,7 @@ async def assign_invoice_to_shipment(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     invoice.shipment_id = shipment_id
     await session.commit()
-    await session.refresh(invoice)
-    return invoice
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
+    )
+    return result.scalar_one()
