@@ -68,6 +68,15 @@ def _to_records(df: pd.DataFrame) -> list[dict]:
 async def _upsert(session: AsyncSession, model, rows: list[dict], conflict_cols: list[str]) -> None:
     if not rows:
         return
+    deduped = {}
+    for row in rows:
+        key = tuple(row.get(col) for col in conflict_cols)
+        if any(k is None for k in key):
+            continue
+        deduped[key] = row
+    rows = list(deduped.values())
+    if not rows:
+        return
     stmt = pg_insert(model).values(rows)
     update_cols = {c: getattr(stmt.excluded, c) for c in rows[0].keys() if c not in conflict_cols}
     stmt = stmt.on_conflict_do_update(index_elements=conflict_cols, set_=update_cols)

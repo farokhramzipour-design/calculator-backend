@@ -4,7 +4,7 @@ import tempfile
 from datetime import date
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
 from app.core.deps import get_db_session
 from app.repositories.taric_repo import TaricRepository
@@ -24,7 +24,16 @@ async def import_taric(
     add_codes_file: UploadFile = File(...),
     force: bool = Form(default=False),
 ):
-    snap = date.fromisoformat(snapshot_date) if snapshot_date else date.today()
+    if snapshot_date:
+        try:
+            snap = date.fromisoformat(snapshot_date)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="snapshot_date must be ISO format YYYY-MM-DD",
+            ) from exc
+    else:
+        snap = date.today()
     with tempfile.TemporaryDirectory() as tmpdir:
         goods_path = Path(tmpdir) / goods_file.filename
         measures_path = Path(tmpdir) / measures_file.filename
