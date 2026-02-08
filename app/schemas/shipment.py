@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
+import uuid
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.enums import Direction, Incoterm, ShipmentStatus
@@ -46,8 +48,8 @@ class ShipmentUpdate(BaseModel):
 
 
 class ShipmentRead(BaseSchema):
-    id: str
-    user_id: str
+    id: uuid.UUID
+    user_id: uuid.UUID
     direction: Direction
     destination_country: str | None
     origin_country_default: str
@@ -55,7 +57,7 @@ class ShipmentRead(BaseSchema):
     currency: str
     fx_rate_to_gbp: str | None
     fx_rate_to_eur: str | None
-    import_date: str | None
+    import_date: date | None
     status: ShipmentStatus
 
 
@@ -131,7 +133,7 @@ class ShipmentItemRead(BaseSchema):
 
 
 class ShipmentDetail(BaseSchema):
-    id: str
+    id: uuid.UUID
     items: list[ShipmentItemRead] = Field(default_factory=list)
     costs: ShipmentCostsRead | None = None
     direction: Direction
@@ -140,4 +142,4 @@ class ShipmentDetail(BaseSchema):
     incoterm: Incoterm
     currency: str
     status: ShipmentStatus
-    import_date: str | None
+    import_date: date | None
