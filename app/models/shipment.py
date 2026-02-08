@@ -13,7 +13,7 @@ class Shipment(Base):
     __tablename__ = "shipments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey(\"users.id\"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     direction: Mapped[Direction] = mapped_column(Enum(Direction), nullable=False)
     destination_country: Mapped[str | None] = mapped_column(String(2))
