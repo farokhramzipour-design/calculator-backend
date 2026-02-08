@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     eu_taric_api_base: str | None = Field(default=None, alias="EU_TARIC_API_BASE")
     eu_taric_api_key: str | None = Field(default=None, alias="EU_TARIC_API_KEY")
 
+    upload_dir: str = Field(default="/app/data/uploads", alias="UPLOAD_DIR")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

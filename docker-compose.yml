@@ -9,9 +9,14 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/landed_cost
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET=change_me
+      - UPLOAD_DIR=/app/data/uploads
+      - OPENAI_API_KEY=
+      - OPENAI_MODEL=gpt-4o-mini
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./data/uploads:/app/data/uploads
 
   postgres:
     image: postgres:15
