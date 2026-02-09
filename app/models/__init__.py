@@ -9,6 +9,7 @@ from app.models.enums import Direction, Incoterm, ShipmentStatus, ProviderType  
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus  # noqa: F401
 from app.models.passport import PassportItem  # noqa: F401
 from app.models.license import License, ShipmentLicense  # noqa: F401
+from app.models.country import Country  # noqa: F401
 from app.models.taric import (  # noqa: F401
     TaricSnapshot,
     GoodsNomenclature,
