@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 
 from app.core.deps import get_current_user, get_db_session
 from app.models.shipment import Shipment
@@ -130,17 +131,65 @@ async def add_item(
     if not shipment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found")
 
+    passport_item = None
+    if payload.passport_item_id:
+        from app.models.passport import PassportItem
+
+        result = await session.execute(
+            select(PassportItem).where(
+                PassportItem.id == uuid.UUID(payload.passport_item_id), PassportItem.user_id == user.id
+            )
+        )
+        passport_item = result.scalar_one_or_none()
+        if not passport_item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Passport item not found")
+
     item = ShipmentItem(
         shipment_id=uuid.UUID(str(shipment_id)),
-        description=payload.description,
-        hs_code=payload.hs_code,
+        description=payload.description or (passport_item.name if passport_item else ""),
+        hs_code=payload.hs_code or (passport_item.hs_code if passport_item else ""),
         origin_country=payload.origin_country,
         additional_code=payload.additional_code,
         passport_item_id=uuid.UUID(payload.passport_item_id) if payload.passport_item_id else None,
         quantity=payload.quantity,
         unit_price=payload.unit_price,
         goods_value=payload.goods_value,
-        weight_net_kg=payload.weight_net_kg,
+        weight_net_kg=payload.weight_net_kg or (passport_item.weight_per_unit if passport_item else None),
+    )
+    return await repo.add_item(item)
+
+
+@router.post("/{shipment_id}/items/from-passport", response_model=ShipmentItemRead)
+async def add_item_from_passport(
+    shipment_id: str,
+    passport_item_id: str,
+    quantity: Decimal,
+    unit_price: Decimal,
+    user=Depends(get_current_user),
+    session=Depends(get_db_session),
+):
+    repo = ShipmentRepository(session)
+    shipment = await repo.get(shipment_id, user.id)
+    if not shipment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shipment not found")
+
+    from app.models.passport import PassportItem
+    result = await session.execute(
+        select(PassportItem).where(PassportItem.id == uuid.UUID(passport_item_id), PassportItem.user_id == user.id)
+    )
+    passport_item = result.scalar_one_or_none()
+    if not passport_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Passport item not found")
+
+    item = ShipmentItem(
+        shipment_id=uuid.UUID(str(shipment_id)),
+        passport_item_id=passport_item.id,
+        description=passport_item.name,
+        hs_code=passport_item.hs_code or "",
+        origin_country=shipment.origin_country_default,
+        quantity=quantity,
+        unit_price=unit_price,
+        weight_net_kg=passport_item.weight_per_unit or passport_item.weight,
     )
     return await repo.add_item(item)
 
@@ -169,8 +218,28 @@ async def update_item(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+    passport_item = None
+    if "passport_item_id" in data and data["passport_item_id"]:
+        from app.models.passport import PassportItem
+
+        result = await session.execute(
+            select(PassportItem).where(PassportItem.id == uuid.UUID(data["passport_item_id"]), PassportItem.user_id == user.id)
+        )
+        passport_item = result.scalar_one_or_none()
+        if not passport_item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Passport item not found")
+
+    for key, value in data.items():
         setattr(item, key, value)
+
+    if passport_item:
+        if not item.description:
+            item.description = passport_item.name
+        if not item.hs_code:
+            item.hs_code = passport_item.hs_code
+        if not item.weight_net_kg:
+            item.weight_net_kg = passport_item.weight_per_unit
     return await repo.update_item(item)
 
 

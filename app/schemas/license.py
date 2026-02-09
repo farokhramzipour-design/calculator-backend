@@ -20,3 +20,7 @@ class LicenseRead(BaseSchema):
 
 class LicenseAssignRequest(BaseModel):
     license_id: uuid.UUID
+
+
+class LicenseBulkAssignRequest(BaseModel):
+    license_ids: list[uuid.UUID]

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.deps import get_current_user, get_db_session
 from app.models.license import License, ShipmentLicense
-from app.schemas.license import LicenseRead, LicenseAssignRequest
+from app.schemas.license import LicenseRead, LicenseAssignRequest, LicenseBulkAssignRequest
 
 router = APIRouter(prefix="/licenses", tags=["licenses"])
 
@@ -79,3 +79,43 @@ async def assign_license_to_shipment(
     session.add(ShipmentLicense(shipment_id=shipment_id, license_id=license_obj.id))
     await session.commit()
     return license_obj
+
+
+@router.post("/assign/bulk", response_model=list[LicenseRead])
+async def assign_licenses_bulk(
+    shipment_id: uuid.UUID,
+    payload: LicenseBulkAssignRequest,
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    result = await session.execute(
+        select(License).where(License.user_id == user.id, License.id.in_(payload.license_ids))
+    )
+    licenses = list(result.scalars().all())
+    if not licenses:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Licenses not found")
+
+    for lic in licenses:
+        session.add(ShipmentLicense(shipment_id=shipment_id, license_id=lic.id))
+    await session.commit()
+    return licenses
+
+
+@router.delete("/assign")
+async def unassign_license(
+    shipment_id: uuid.UUID,
+    license_id: uuid.UUID,
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    result = await session.execute(
+        select(ShipmentLicense)
+        .join(License, ShipmentLicense.license_id == License.id)
+        .where(ShipmentLicense.shipment_id == shipment_id, ShipmentLicense.license_id == license_id, License.user_id == user.id)
+    )
+    link = result.scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="License assignment not found")
+    await session.delete(link)
+    await session.commit()
+    return {"status": "ok"}

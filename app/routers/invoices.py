@@ -192,12 +192,22 @@ async def update_invoice(
         # replace items list
         for existing in list(invoice.items):
             await session.delete(existing)
+        passport_map = {}
+        from app.models.passport import PassportItem
+        passport_ids = [i.get("passport_item_id") for i in items if i.get("passport_item_id")]
+        if passport_ids:
+            result = await session.execute(
+                select(PassportItem).where(PassportItem.user_id == user.id, PassportItem.id.in_(passport_ids))
+            )
+            passport_map = {str(p.id): p for p in result.scalars().all()}
+
         for item in items:
+            passport_item = passport_map.get(str(item.get("passport_item_id"))) if item.get("passport_item_id") else None
             session.add(
                 InvoiceItem(
                     invoice_id=invoice.id,
-                    description=item.get("description") or "",
-                    hs_code=item.get("hs_code"),
+                    description=item.get("description") or (passport_item.name if passport_item else ""),
+                    hs_code=item.get("hs_code") or (passport_item.hs_code if passport_item else None),
                     origin_country=item.get("origin_country"),
                     vat_code=item.get("vat_code"),
                     passport_item_id=item.get("passport_item_id"),
@@ -230,6 +240,49 @@ async def assign_invoice_to_shipment(
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     invoice.shipment_id = shipment_id
+    await session.commit()
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
+    )
+    return result.scalar_one()
+
+
+@router.post("/{invoice_id}/items/from-passport", response_model=InvoiceRead)
+async def add_invoice_item_from_passport(
+    invoice_id: uuid.UUID,
+    passport_item_id: uuid.UUID,
+    quantity: float | None = None,
+    unit_price: float | None = None,
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    from app.models.passport import PassportItem
+
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice_id, Invoice.user_id == user.id).options(selectinload(Invoice.items))
+    )
+    invoice = result.scalar_one_or_none()
+    if not invoice:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
+
+    result = await session.execute(
+        select(PassportItem).where(PassportItem.id == passport_item_id, PassportItem.user_id == user.id)
+    )
+    passport_item = result.scalar_one_or_none()
+    if not passport_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Passport item not found")
+
+    session.add(
+        InvoiceItem(
+            invoice_id=invoice.id,
+            passport_item_id=passport_item.id,
+            description=passport_item.name,
+            hs_code=passport_item.hs_code,
+            origin_country=None,
+            quantity=_normalize_decimal(quantity),
+            unit_price=_normalize_decimal(unit_price),
+        )
+    )
     await session.commit()
     result = await session.execute(
         select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
