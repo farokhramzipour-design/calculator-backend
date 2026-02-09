@@ -21,6 +21,7 @@ class Incoterm(str, Enum):
     EXW = "EXW"
     FOB = "FOB"
     CIF = "CIF"
+    CFR = "CFR"
     DDP = "DDP"
     FCA = "FCA"
     CPT = "CPT"

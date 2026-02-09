@@ -83,7 +83,7 @@ class CalculatorService:
                     warnings=warnings,
                 )
 
-        if shipment.incoterm in {Incoterm.CIF, Incoterm.DDP}:
+        if shipment.incoterm in {Incoterm.CIF, Incoterm.DDP, Incoterm.CFR}:
             assumptions.append("Incoterm implies shipping/insurance included unless overridden.")
 
         if costs.insurance_amount is None:
