@@ -79,9 +79,11 @@ def upgrade() -> None:
         sa.column("name", sa.String),
         sa.column("region", sa.String),
     )
-    insert_sql = "INSERT INTO countries (id, code, name, region) VALUES " + ", ".join(
-        ["(gen_random_uuid(), '%s', '%s', '%s')" % (code, name.replace(\"'\", \"''\"), region) for region, name, code in COUNTRIES]
-    )
+    values = []
+    for region, name, code in COUNTRIES:
+        safe_name = name.replace("'", "''")
+        values.append("(gen_random_uuid(), '%s', '%s', '%s')" % (code, safe_name, region))
+    insert_sql = "INSERT INTO countries (id, code, name, region) VALUES " + ", ".join(values)
     op.execute(insert_sql)
 
 
