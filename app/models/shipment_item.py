@@ -14,6 +14,7 @@ class ShipmentItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     shipment_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("shipments.id"), nullable=False)
+    passport_item_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("passport_items.id"))
 
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     hs_code: Mapped[str] = mapped_column(String(16), nullable=False)
@@ -31,3 +32,4 @@ class ShipmentItem(Base):
     )
 
     shipment = relationship("Shipment", back_populates="items")
+    passport_item = relationship("PassportItem", back_populates="shipment_items")

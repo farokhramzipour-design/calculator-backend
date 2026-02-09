@@ -136,6 +136,7 @@ async def add_item(
         hs_code=payload.hs_code,
         origin_country=payload.origin_country,
         additional_code=payload.additional_code,
+        passport_item_id=uuid.UUID(payload.passport_item_id) if payload.passport_item_id else None,
         quantity=payload.quantity,
         unit_price=payload.unit_price,
         goods_value=payload.goods_value,

@@ -12,6 +12,7 @@ from app.models.invoice import InvoiceStatus
 
 class InvoiceItemRead(BaseSchema):
     id: uuid.UUID
+    passport_item_id: uuid.UUID | None
     description: str
     hs_code: str | None
     origin_country: str | None
@@ -59,6 +60,7 @@ class InvoiceReviewUpdate(BaseModel):
 
 class InvoiceItemUpdate(BaseModel):
     id: uuid.UUID | None = None
+    passport_item_id: uuid.UUID | None = None
     description: str | None = None
     hs_code: str | None = None
     origin_country: str | None = None

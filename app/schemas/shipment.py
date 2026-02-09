@@ -92,6 +92,7 @@ class ShipmentItemCreate(BaseModel):
     hs_code: str = Field(pattern=r"^\\d{4,10}$")
     origin_country: str = Field(pattern=r"^[A-Z]{2}$")
     additional_code: str | None = None
+    passport_item_id: str | None = None
     quantity: Decimal = Field(ge=0)
     unit_price: Decimal = Field(ge=0)
     goods_value: Decimal | None = Field(default=None, ge=0)
@@ -108,6 +109,7 @@ class ShipmentItemUpdate(BaseModel):
     hs_code: str | None = Field(default=None, pattern=r"^\\d{4,10}$")
     origin_country: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     additional_code: str | None = None
+    passport_item_id: str | None = None
     quantity: Decimal | None = Field(default=None, ge=0)
     unit_price: Decimal | None = Field(default=None, ge=0)
     goods_value: Decimal | None = Field(default=None, ge=0)
@@ -125,6 +127,7 @@ class ShipmentItemRead(BaseSchema):
     description: str
     hs_code: str
     origin_country: str
+    passport_item_id: str | None
     additional_code: str | None
     quantity: Decimal
     unit_price: Decimal

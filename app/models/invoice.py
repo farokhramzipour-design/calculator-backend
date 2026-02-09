@@ -62,6 +62,7 @@ class InvoiceItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     invoice_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=False)
+    passport_item_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("passport_items.id"))
 
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     hs_code: Mapped[str | None] = mapped_column(String(16))
@@ -76,3 +77,4 @@ class InvoiceItem(Base):
     total_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
 
     invoice = relationship("Invoice", back_populates="items")
+    passport_item = relationship("PassportItem", back_populates="invoice_items")

@@ -200,6 +200,7 @@ async def update_invoice(
                     hs_code=item.get("hs_code"),
                     origin_country=item.get("origin_country"),
                     vat_code=item.get("vat_code"),
+                    passport_item_id=item.get("passport_item_id"),
                     pack_count=_normalize_decimal(item.get("pack_count")),
                     pack_type=item.get("pack_type"),
                     net_weight=_normalize_decimal(item.get("net_weight")),

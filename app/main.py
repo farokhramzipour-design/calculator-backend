@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
-from app.routers import auth, calculation, invoices, rates, shipments, taric
+from app.routers import auth, calculation, invoices, licenses, passport, rates, shipments, taric
 
 settings = get_settings()
 
@@ -35,6 +35,8 @@ app.include_router(calculation.router, prefix=settings.api_prefix)
 app.include_router(taric.router, prefix=settings.api_prefix)
 app.include_router(taric.admin_router, prefix=settings.api_prefix)
 app.include_router(invoices.router, prefix=settings.api_prefix)
+app.include_router(passport.router, prefix=settings.api_prefix)
+app.include_router(licenses.router, prefix=settings.api_prefix)
 
 
 @app.get("/")
