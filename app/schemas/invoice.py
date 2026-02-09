@@ -15,6 +15,11 @@ class InvoiceItemRead(BaseSchema):
     description: str
     hs_code: str | None
     origin_country: str | None
+    vat_code: str | None
+    pack_count: Decimal | None
+    pack_type: str | None
+    net_weight: Decimal | None
+    gross_weight: Decimal | None
     quantity: Decimal | None
     unit_price: Decimal | None
     total_price: Decimal | None
@@ -29,6 +34,11 @@ class InvoiceRead(BaseSchema):
     invoice_date: date | None
     supplier_name: str | None
     buyer_name: str | None
+    buyer_address: str | None
+    seller_address: str | None
+    buyer_eori: str | None
+    seller_eori: str | None
+    incoterm: str | None
     currency: str | None
     subtotal: Decimal | None
     freight: Decimal | None
