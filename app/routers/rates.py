@@ -7,6 +7,7 @@ from app.schemas.rates import FxRateResponse, TariffRateResponse, VatRateRespons
 from app.services.providers.eu_taric import EuTaricProvider
 from app.services.providers.fx_ecb import FxProvider
 from app.services.providers.uk_tariff import UkTariffProvider
+from app.services.providers.uk_tariff_search import UkTariffSearchProvider
 from app.services.providers.vat import VatRateProvider
 
 router = APIRouter(prefix="/rates", tags=["rates"])
@@ -31,6 +32,19 @@ async def uk_tariff(commodity_code: str, session=Depends(get_db_session)):
     provider = UkTariffProvider(session)
     result = await provider.get_duty_rate(None, commodity_code, None, False)
     return TariffRateResponse(code=commodity_code, rate=result.rate, source=result.source, is_estimated=result.is_estimated)
+
+@router.get("/tariff/uk/commodity")
+async def uk_tariff_commodity(commodity_code: str, session=Depends(get_db_session)):
+    provider = UkTariffProvider(session)
+    payload = await provider.get_commodity_details(commodity_code)
+    return payload
+
+
+@router.get("/tariff/uk/search")
+async def uk_tariff_search(description: str):
+    provider = UkTariffSearchProvider()
+    payload = await provider.search_by_description(description)
+    return payload
 
 
 @router.get("/tariff/eu", response_model=TariffRateResponse)

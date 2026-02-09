@@ -75,6 +75,17 @@ class UkTariffProvider:
             return DutyRateResult(rate=None, source="override_missing", is_estimated=True, missing=True)
         return DutyRateResult(rate=Decimal(override.duty_rate), source="override", is_estimated=True, missing=False)
 
+    async def get_commodity_details(self, commodity_code: str) -> dict:
+        cache_key = f"uk_tariff:commodity:{commodity_code}"
+        cached = await redis_get_json(cache_key)
+        if cached:
+            return cached
+
+        url = f"{self.settings.uk_tariff_api_base}/commodities/{commodity_code}"
+        payload = await get_json(url)
+        await redis_set_json(cache_key, payload, TTL_SECONDS)
+        return payload
+
     def _extract_ad_valorem(self, payload: dict) -> Decimal | None:
         included = payload.get("included", [])
         for item in included:

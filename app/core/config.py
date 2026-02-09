@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
 
+    uk_tariff_search_base: str = Field(default="https://search.trade-tariff.service.gov.uk", alias="UK_TARIFF_SEARCH_BASE")
+    uk_tariff_search_key: str | None = Field(default=None, alias="UK_TARIFF_SEARCH_KEY")
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
