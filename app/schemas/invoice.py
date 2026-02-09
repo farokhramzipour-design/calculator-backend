@@ -55,3 +55,37 @@ class InvoiceAssignRequest(BaseModel):
 
 class InvoiceReviewUpdate(BaseModel):
     status: InvoiceStatus
+
+
+class InvoiceItemUpdate(BaseModel):
+    id: uuid.UUID | None = None
+    description: str | None = None
+    hs_code: str | None = None
+    origin_country: str | None = None
+    vat_code: str | None = None
+    pack_count: Decimal | None = None
+    pack_type: str | None = None
+    net_weight: Decimal | None = None
+    gross_weight: Decimal | None = None
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+    total_price: Decimal | None = None
+
+
+class InvoiceUpdate(BaseModel):
+    invoice_number: str | None = None
+    invoice_date: date | None = None
+    supplier_name: str | None = None
+    buyer_name: str | None = None
+    buyer_address: str | None = None
+    seller_address: str | None = None
+    buyer_eori: str | None = None
+    seller_eori: str | None = None
+    incoterm: str | None = None
+    currency: str | None = None
+    subtotal: Decimal | None = None
+    freight: Decimal | None = None
+    insurance: Decimal | None = None
+    tax_total: Decimal | None = None
+    total: Decimal | None = None
+    items: list[InvoiceItemUpdate] | None = None

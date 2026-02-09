@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.core.deps import get_current_user, get_db_session
 from app.invoices.openai_extractor import extract_invoice, _normalize_decimal, _parse_date
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
-from app.schemas.invoice import InvoiceRead, InvoiceAssignRequest, InvoiceReviewUpdate
+from app.schemas.invoice import InvoiceRead, InvoiceAssignRequest, InvoiceReviewUpdate, InvoiceUpdate
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -157,6 +157,59 @@ async def review_invoice(
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     invoice.status = payload.status
+    await session.commit()
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
+    )
+    return result.scalar_one()
+
+
+@router.patch("/{invoice_id}", response_model=InvoiceRead)
+async def update_invoice(
+    invoice_id: uuid.UUID,
+    payload: InvoiceUpdate,
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    result = await session.execute(
+        select(Invoice).where(Invoice.id == invoice_id, Invoice.user_id == user.id).options(selectinload(Invoice.items))
+    )
+    invoice = result.scalar_one_or_none()
+    if not invoice:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
+
+    data = payload.model_dump(exclude_unset=True)
+    items = data.pop("items", None)
+
+    for key, value in data.items():
+        if key == "currency":
+            value = _normalize_currency(value)
+        if key == "incoterm":
+            value = _normalize_incoterm(value)
+        setattr(invoice, key, value)
+
+    if items is not None:
+        # replace items list
+        for existing in list(invoice.items):
+            await session.delete(existing)
+        for item in items:
+            session.add(
+                InvoiceItem(
+                    invoice_id=invoice.id,
+                    description=item.description or "",
+                    hs_code=item.hs_code,
+                    origin_country=item.origin_country,
+                    vat_code=item.vat_code,
+                    pack_count=_normalize_decimal(item.pack_count),
+                    pack_type=item.pack_type,
+                    net_weight=_normalize_decimal(item.net_weight),
+                    gross_weight=_normalize_decimal(item.gross_weight),
+                    quantity=_normalize_decimal(item.quantity),
+                    unit_price=_normalize_decimal(item.unit_price),
+                    total_price=_normalize_decimal(item.total_price),
+                )
+            )
+
     await session.commit()
     result = await session.execute(
         select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
