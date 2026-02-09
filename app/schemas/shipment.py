@@ -103,6 +103,13 @@ class ShipmentItemCreate(BaseModel):
     def normalize_origin_country(cls, value: str):
         return value.upper() if isinstance(value, str) else value
 
+    @field_validator("hs_code", mode="before")
+    @classmethod
+    def normalize_hs_code(cls, value: str):
+        if not isinstance(value, str):
+            return value
+        return "".join(ch for ch in value if ch.isdigit())
+
 
 class ShipmentItemUpdate(BaseModel):
     description: str | None = None
@@ -119,6 +126,13 @@ class ShipmentItemUpdate(BaseModel):
     @classmethod
     def normalize_origin_country(cls, value: str | None):
         return value.upper() if isinstance(value, str) else value
+
+    @field_validator("hs_code", mode="before")
+    @classmethod
+    def normalize_hs_code(cls, value: str | None):
+        if not isinstance(value, str):
+            return value
+        return "".join(ch for ch in value if ch.isdigit())
 
 
 class ShipmentItemRead(BaseSchema):

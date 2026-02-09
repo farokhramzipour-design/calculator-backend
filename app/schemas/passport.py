@@ -13,7 +13,6 @@ class PassportItemCreate(BaseModel):
     hs_code: str | None = None
     supplier: str | None = None
     weight_per_unit: Decimal | None = None
-    weight: Decimal | None = None
     notes: str | None = None
 
 
@@ -23,7 +22,6 @@ class PassportItemUpdate(BaseModel):
     hs_code: str | None = None
     supplier: str | None = None
     weight_per_unit: Decimal | None = None
-    weight: Decimal | None = None
     notes: str | None = None
 
 
@@ -35,5 +33,4 @@ class PassportItemRead(BaseSchema):
     hs_code: str | None
     supplier: str | None
     weight_per_unit: Decimal | None
-    weight: Decimal | None
     notes: str | None

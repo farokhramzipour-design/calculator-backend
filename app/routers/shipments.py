@@ -190,7 +190,7 @@ async def add_item_from_passport(
         origin_country=shipment.origin_country_default,
         quantity=quantity,
         unit_price=unit_price,
-        weight_net_kg=passport_item.weight_per_unit or passport_item.weight,
+        weight_net_kg=passport_item.weight_per_unit,
     )
     return await repo.add_item(item)
 
