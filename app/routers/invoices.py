@@ -40,6 +40,7 @@ async def upload_invoice(
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     currency = _normalize_currency(extracted.get("currency"))
+    incoterm = _normalize_incoterm(extracted.get("incoterm"))
     invoice = Invoice(
         user_id=user.id,
         file_path=str(stored_path),
@@ -52,7 +53,7 @@ async def upload_invoice(
         seller_address=extracted.get("seller_address"),
         buyer_eori=extracted.get("buyer_eori"),
         seller_eori=extracted.get("seller_eori"),
-        incoterm=extracted.get("incoterm"),
+        incoterm=incoterm,
         currency=currency,
         subtotal=_normalize_decimal(extracted.get("subtotal")),
         freight=_normalize_decimal(extracted.get("freight")),
@@ -110,6 +111,19 @@ def _normalize_currency(value: str | None) -> str | None:
     if len(alpha) >= 3:
         return alpha[:3]
     return None
+
+
+def _normalize_incoterm(value: str | None) -> str | None:
+    if not value:
+        return None
+    val = value.strip().upper()
+    known = {"EXW", "FOB", "CIF", "DDP", "FCA", "CPT", "CIP", "DAP"}
+    for term in known:
+        if term in val:
+            return term
+    # fallback to first 3-4 chars
+    alpha = "".join(ch for ch in val if ch.isalpha())
+    return alpha[:4] if len(alpha) >= 4 else (alpha or None)
 
 
 @router.get("", response_model=list[InvoiceRead])
