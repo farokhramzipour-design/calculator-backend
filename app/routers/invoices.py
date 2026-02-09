@@ -39,6 +39,7 @@ async def upload_invoice(
     except RuntimeError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
+    currency = _normalize_currency(extracted.get("currency"))
     invoice = Invoice(
         user_id=user.id,
         file_path=str(stored_path),
@@ -52,7 +53,7 @@ async def upload_invoice(
         buyer_eori=extracted.get("buyer_eori"),
         seller_eori=extracted.get("seller_eori"),
         incoterm=extracted.get("incoterm"),
-        currency=extracted.get("currency"),
+        currency=currency,
         subtotal=_normalize_decimal(extracted.get("subtotal")),
         freight=_normalize_decimal(extracted.get("freight")),
         insurance=_normalize_decimal(extracted.get("insurance")),
@@ -87,6 +88,28 @@ async def upload_invoice(
         select(Invoice).where(Invoice.id == invoice.id).options(selectinload(Invoice.items))
     )
     return result.scalar_one()
+
+
+def _normalize_currency(value: str | None) -> str | None:
+    if not value:
+        return None
+    val = value.strip().upper()
+    symbols = {
+        "£": "GBP",
+        "€": "EUR",
+        "$": "USD",
+    }
+    if val in symbols:
+        return symbols[val]
+    if val in {"GBP", "EUR", "USD"}:
+        return val
+    for symbol, code in symbols.items():
+        if symbol in val:
+            return code
+    alpha = "".join(ch for ch in val if ch.isalpha())
+    if len(alpha) >= 3:
+        return alpha[:3]
+    return None
 
 
 @router.get("", response_model=list[InvoiceRead])
