@@ -76,7 +76,7 @@ class ShipmentCostsUpdate(BaseModel):
 
 
 class ShipmentCostsRead(BaseSchema):
-    shipment_id: str
+    shipment_id: uuid.UUID
     freight_amount: Decimal | None
     insurance_amount: Decimal | None
     insurance_is_estimated: bool
