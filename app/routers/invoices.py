@@ -196,17 +196,17 @@ async def update_invoice(
             session.add(
                 InvoiceItem(
                     invoice_id=invoice.id,
-                    description=item.description or "",
-                    hs_code=item.hs_code,
-                    origin_country=item.origin_country,
-                    vat_code=item.vat_code,
-                    pack_count=_normalize_decimal(item.pack_count),
-                    pack_type=item.pack_type,
-                    net_weight=_normalize_decimal(item.net_weight),
-                    gross_weight=_normalize_decimal(item.gross_weight),
-                    quantity=_normalize_decimal(item.quantity),
-                    unit_price=_normalize_decimal(item.unit_price),
-                    total_price=_normalize_decimal(item.total_price),
+                    description=item.get("description") or "",
+                    hs_code=item.get("hs_code"),
+                    origin_country=item.get("origin_country"),
+                    vat_code=item.get("vat_code"),
+                    pack_count=_normalize_decimal(item.get("pack_count")),
+                    pack_type=item.get("pack_type"),
+                    net_weight=_normalize_decimal(item.get("net_weight")),
+                    gross_weight=_normalize_decimal(item.get("gross_weight")),
+                    quantity=_normalize_decimal(item.get("quantity")),
+                    unit_price=_normalize_decimal(item.get("unit_price")),
+                    total_price=_normalize_decimal(item.get("total_price")),
                 )
             )
 
