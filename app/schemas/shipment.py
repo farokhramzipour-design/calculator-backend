@@ -135,9 +135,12 @@ class ShipmentItemUpdate(BaseModel):
         return "".join(ch for ch in value if ch.isdigit())
 
 
+import uuid
+
+
 class ShipmentItemRead(BaseSchema):
-    id: str
-    shipment_id: str
+    id: uuid.UUID
+    shipment_id: uuid.UUID
     description: str
     hs_code: str
     origin_country: str
