@@ -89,7 +89,7 @@ class ShipmentCostsRead(BaseSchema):
 
 class ShipmentItemCreate(BaseModel):
     description: str
-    hs_code: str = Field(pattern=r"^\\d{4,10}$")
+    hs_code: str
     origin_country: str = Field(pattern=r"^[A-Z]{2}$")
     additional_code: str | None = None
     passport_item_id: str | None = None
@@ -113,7 +113,7 @@ class ShipmentItemCreate(BaseModel):
 
 class ShipmentItemUpdate(BaseModel):
     description: str | None = None
-    hs_code: str | None = Field(default=None, pattern=r"^\\d{4,10}$")
+    hs_code: str | None = None
     origin_country: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     additional_code: str | None = None
     passport_item_id: str | None = None
