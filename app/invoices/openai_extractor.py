@@ -12,6 +12,8 @@ from docx import Document
 from app.core.config import get_settings
 
 
+
+
 def _docx_to_text(path: Path) -> str:
     doc = Document(path)
     return "\n".join([p.text for p in doc.paragraphs if p.text])
